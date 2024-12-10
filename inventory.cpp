@@ -6,19 +6,18 @@
 #include <string>
 using namespace std;
 
-// Book class represents a single book's details
+// Book Class
 class Book {
 private:
-    string title;      // Title of the book
-    string author;     // Author's name
-    string publisher;  // Publisher's name
-    string edition;    // Edition details
-    int ID;            // Unique identifier for the book
+    string title;      // Book title
+    string author;     // Author name
+    string publisher;  // Publisher name
+    string edition;    // Edition of the book
+    int ID;            // Unique book ID
     double price;      // Price of the book
-    int stock;         // Available stock of the book
-
+    int stock;         // Number of books in stock
 public:
-    // Constructor to initialize book details
+    // Constructor to initialize Book details
     Book(string title, string author, string publisher, string edition, int ID, double price, int stock) {
         this->title = title;
         this->author = author;
@@ -28,36 +27,65 @@ public:
         this->price = price;
         this->stock = stock;
     }
-
-    // Declaring the friend classes to allow them access to private members
-    friend class Bookshop;
-    friend class Sale;
+    friend class Bookshop; // Grant Bookshop access to private members
+    friend class Sale;     // Grant Sale access to private members
 };
 
-// Sale class tracks details of a single sale transaction
+// Sale Class
 class Sale {
 public:
-    string title;      // Title of the sold book
-    int quantity;      // Quantity sold
-    double totalPrice; // Total price of the sale
+    string title;       // Title of the book sold
+    int quantity;       // Quantity sold
+    double totalPrice;  // Total price of the sale
 
-    // Constructor to initialize a sale transaction
+    // Constructor to initialize Sale details
     Sale(string t, int q, double tp) : title(t), quantity(q), totalPrice(tp) {}
 };
 
-// Bookshop class manages the book inventory and sales operations
-class Bookshop {
+// Customer Class
+class Customer {
 private:
-    vector<Book> inventory; // List of all books in the inventory
-    vector<Sale> sales;     // List of all completed sales
-
+    string name;                // Customer's name
+    int customerID;             // Unique customer ID
+    string contact;             // Customer's contact information
+    vector<Sale> purchaseHistory; // Record of all purchases made by the customer
 public:
-    // Function to add a new book to the inventory
-    void addBook(Book newBook) {
-        inventory.push_back(newBook);
+    // Constructor to initialize Customer details
+    Customer(string name, int customerID, string contact) {
+        this->name = name;
+        this->customerID = customerID;
+        this->contact = contact;
     }
 
-    // Utility function to normalize strings (convert to lowercase and remove spaces)
+    // Add a new sale to the customer's purchase history
+    void addPurchase(Sale sale) {
+        purchaseHistory.push_back(sale);
+    }
+
+    // Display the customer's purchase history
+    void viewPurchaseHistory() {
+        if (purchaseHistory.empty()) {
+            cout << "No purchases found for customer " << name << ".\n";
+            return;
+        }
+        cout << "\n--- Purchase History for " << name << " ---\n";
+        for (const auto& sale : purchaseHistory) {
+            cout << "Title: " << sale.title << ", Quantity: " << sale.quantity 
+                 << ", Total Price: $" << fixed << setprecision(2) << sale.totalPrice << endl;
+        }
+    }
+
+    friend class Bookshop; // Grant Bookshop access to private members
+};
+
+// Bookshop Class
+class Bookshop {
+private:
+    vector<Book> inventory;       // List of books in the inventory
+    vector<Sale> sales;           // List of all sales
+    vector<Customer> customers;   // List of all customers
+
+    // Helper function to normalize a string for comparison (ignores case and spaces)
     string normalizeString(const string& input) {
         string normalized;
         for (char ch : input) {
@@ -68,30 +96,34 @@ public:
         return normalized;
     }
 
-    // Function to delete a book by its ID
+public:
+    // Add a new book to the inventory
+    void addBook(Book newBook) {
+        inventory.push_back(newBook);
+    }
+
+    // Delete a book from the inventory based on its ID
     void deleteBook(int idtoDelete) {
-        // Iterate over the inventory
-        for (auto it = inventory.begin(); it != inventory.end(); /* no increment here */) {
-            if (it->ID == idtoDelete) { // If book ID matches
-                inventory.erase(it); // Remove the book from inventory
+        for (auto it = inventory.begin(); it != inventory.end();) {
+            if (it->ID == idtoDelete) {
+                inventory.erase(it);
                 cout << "Book deleted successfully!\n";
-                return; // Exit after deletion
+                return;
             } else {
-                ++it; // Increment iterator if no deletion occurs
+                ++it;
             }
         }
         cout << "Book not found in inventory.\n";
     }
 
-    // Function to display all books in the inventory
+    // Display all books in the inventory
     void viewBooks() {
-        if (inventory.empty()) { // Check if inventory is empty
+        if (inventory.empty()) {
             cout << "No books in the inventory.\n";
             return;
         }
 
         cout << "\n--- Book Inventory ---\n";
-        // Display details of each book
         for (const auto &book : inventory) {
             cout << "Title: " << book.title << "\n";
             cout << "Author: " << book.author << "\n";
@@ -104,37 +136,46 @@ public:
         }
     }
 
-    // Function to check for books below a stock threshold
-    void checkLowStock(int threshold) {
-        cout << "\n--- Books Below Threshold Stock ---\n";
-        bool found = false; // Track if any books are below threshold
+    // Add a new customer
+    void addCustomer(Customer newCustomer) {
+        customers.push_back(newCustomer);
+        cout << "Customer added successfully!\n";
+    }
 
-        // Iterate through the inventory
-        for (const auto &book : inventory) {
-            if (book.stock < threshold) { // Check stock level
-                cout << "Title: " << book.title << "\n";
-                cout << "Author: " << book.author << "\n";
-                cout << "Stock: " << book.stock << "\n";
-                cout << "-------------------------\n";
-                found = true;
-            }
+    // Display all customers
+    void viewCustomers() {
+        if (customers.empty()) {
+            cout << "No customers found.\n";
+            return;
         }
-
-        if (!found) {
-            cout << "No books below the threshold stock.\n";
+        cout << "\n--- Customer List ---\n";
+        for (const auto& customer : customers) {
+            cout << "Name: " << customer.name << "\n";
+            cout << "Customer ID: " << customer.customerID << "\n";
+            cout << "Contact: " << customer.contact << "\n";
+            cout << "-------------------------\n";
         }
     }
 
-    // Function to handle book purchases
-    void purchaseBook(string title, int quantity) {
-        string normalizedTitle = normalizeString(title); // Normalize input title
-        for (auto& book : inventory) { // Search for the book in inventory
+    // Purchase a book
+    void purchaseBook(string title, int quantity, int customerID) {
+        string normalizedTitle = normalizeString(title);
+        for (auto& book : inventory) {
             if (normalizeString(book.title) == normalizedTitle) {
-                if (book.stock >= quantity) { // Check stock availability
-                    double totalPrice = quantity * book.price; // Calculate total price
-                    book.stock -= quantity; // Reduce stock
-                    sales.push_back(Sale(book.title, quantity, totalPrice)); // Log the sale
-                    cout << "\nPurchase successful! Total Price: $" << totalPrice << endl;
+                if (book.stock >= quantity) {
+                    double totalPrice = quantity * book.price;
+                    book.stock -= quantity;
+                    sales.push_back(Sale(book.title, quantity, totalPrice));
+
+                    // Update customer's purchase history
+                    for (auto& customer : customers) {
+                        if (customer.customerID == customerID) {
+                            customer.addPurchase(Sale(book.title, quantity, totalPrice));
+                            cout << "\nPurchase successful! Total Price: $" << totalPrice << endl;
+                            return;
+                        }
+                    }
+                    cout << "\nCustomer not found. Purchase recorded without linking to customer.\n";
                     return;
                 } else {
                     cout << "\nInsufficient stock available.\n";
@@ -145,36 +186,39 @@ public:
         cout << "\nBook not found in inventory.\n";
     }
 
-    // Function to display sales report
+    // Display sales report
     void displaySalesReport() {
         cout << "\nSales Report:\n";
         cout << setw(20) << "Title" << setw(10) << "Quantity" << setw(15) << "Total Price\n";
-        for (const auto& sale : sales) { // Display details of each sale
+        for (const auto& sale : sales) {
             cout << setw(20) << sale.title << setw(10) << sale.quantity 
                  << setw(15) << fixed << setprecision(2) << sale.totalPrice << endl;
         }
     }
 };
 
+// Main Function
 int main() {
-    Bookshop bookshop; // Create an instance of Bookshop
+    Bookshop bookshop; // Create a Bookshop object
+    int choice;        // Variable to store user choice
 
-    int choice; // Variable to store user's choice
     do {
         // Display menu options
         cout << "\n--- Bookshop Management System ---\n";
         cout << "1. Add Book\n";
         cout << "2. Delete Book\n";
         cout << "3. View Books\n";
-        cout << "4. Check Low Stock\n";
-        cout << "5. Purchase Book\n";
-        cout << "6. Display Sales Report\n";
-        cout << "7. Exit\n";
+        cout << "4. Add Customer\n";
+        cout << "5. View Customers\n";
+        cout << "6. Purchase Book\n";
+        cout << "7. Display Sales Report\n";
+        cout << "8. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
+        // Perform actions based on user choice
         switch (choice) {
-            case 1: { // Add a new book
+            case 1: {
                 string title, author, publisher, edition;
                 int ID, stock;
                 double price;
@@ -196,44 +240,57 @@ int main() {
                 bookshop.addBook(Book(title, author, publisher, edition, ID, price, stock));
                 break;
             }
-            case 2: { // Delete a book by ID
+            case 2: {
                 int ID;
                 cout << "Enter ID of the book to delete: ";
                 cin >> ID;
                 bookshop.deleteBook(ID);
                 break;
             }
-            case 3: // View all books
+            case 3:
                 bookshop.viewBooks();
                 break;
-            case 4: { // Check for low-stock books
-                int threshold;
-                cout << "Enter stock threshold: ";
-                cin >> threshold;
-                bookshop.checkLowStock(threshold);
+            case 4: {
+                string name, contact;
+                int customerID;
+                cout << "Enter Customer Name: ";
+                cin.ignore();
+                getline(cin, name);
+                cout << "Enter Customer ID: ";
+                cin >> customerID;
+                cout << "Enter Contact: ";
+                cin.ignore();
+                getline(cin, contact);
+                bookshop.addCustomer(Customer(name, customerID, contact));
                 break;
             }
-            case 5: { // Purchase a book
+            case 5:
+                bookshop.viewCustomers();
+                break;
+            case 6: {
                 string title;
-                int quantity;
-                cout << "Enter book title: ";
+                int quantity, customerID;
+                cout << "Enter Book Title: ";
                 cin.ignore();
                 getline(cin, title);
-                cout << "Enter quantity: ";
+                cout << "Enter Quantity: ";
                 cin >> quantity;
-                bookshop.purchaseBook(title, quantity);
+                cout << "Enter Customer ID: ";
+                cin >> customerID;
+                bookshop.purchaseBook(title, quantity, customerID);
                 break;
             }
-            case 6: // Display sales report
+            case 7:
                 bookshop.displaySalesReport();
                 break;
-            case 7: // Exit
+            case 8:
                 cout << "Exiting the system. Thank you!\n";
                 break;
-            default: // Handle invalid choices
+            default:
                 cout << "Invalid choice. Please try again.\n";
         }
-    } while (choice != 7);
+    } while (choice != 8);
 
-    return 0; // End of program
+    return 0;
 }
+
