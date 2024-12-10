@@ -48,8 +48,9 @@ private:
     string name;                // Customer's name
     int customerID;             // Unique customer ID
     string contact;             // Customer's contact information
-    vector<Sale> purchaseHistory; // Record of all purchases made by the customer
+    
 public:
+    vector<Sale> purchaseHistory; // Record of all purchases made by the customer
     // Constructor to initialize Customer details
     Customer(string name, int customerID, string contact) {
         this->name = name;
@@ -80,11 +81,11 @@ public:
 
 // Bookshop Class
 class Bookshop {
-private:
+    public:
+    
     vector<Book> inventory;       // List of books in the inventory
     vector<Sale> sales;           // List of all sales
     vector<Customer> customers;   // List of all customers
-
     // Helper function to normalize a string for comparison (ignores case and spaces)
     string normalizeString(const string& input) {
         string normalized;
@@ -95,13 +96,19 @@ private:
         }
         return normalized;
     }
-
-public:
     // Add a new book to the inventory
     void addBook(Book newBook) {
         inventory.push_back(newBook);
     }
 
+    // Check if the stock is low for a specific book
+    void checkLowStock(const Book& book) {
+        int threshold = 5; // Set threshold for low stock
+        if (book.stock <= threshold) {
+            cout << "Warning: Stock is low for book \"" << book.title << "\". Only " 
+                 << book.stock << " copies left.\n";
+        }
+    }
     // Delete a book from the inventory based on its ID
     void deleteBook(int idtoDelete) {
         for (auto it = inventory.begin(); it != inventory.end();) {
@@ -157,7 +164,7 @@ public:
         }
     }
 
-    // Purchase a book
+   // Purchase a book
     void purchaseBook(string title, int quantity, int customerID) {
         string normalizedTitle = normalizeString(title);
         for (auto& book : inventory) {
@@ -165,6 +172,8 @@ public:
                 if (book.stock >= quantity) {
                     double totalPrice = quantity * book.price;
                     book.stock -= quantity;
+                    checkLowStock(book); // Check low stock after the purchase
+
                     sales.push_back(Sale(book.title, quantity, totalPrice));
 
                     // Update customer's purchase history
@@ -185,6 +194,8 @@ public:
         }
         cout << "\nBook not found in inventory.\n";
     }
+      
+    
 
     // Display sales report
     void displaySalesReport() {
@@ -212,7 +223,8 @@ int main() {
         cout << "5. View Customers\n";
         cout << "6. Purchase Book\n";
         cout << "7. Display Sales Report\n";
-        cout << "8. Exit\n";
+        cout << "7. Check Low Stock\n";
+        cout << "9. Exit\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -284,13 +296,19 @@ int main() {
                 bookshop.displaySalesReport();
                 break;
             case 8:
+                // Check low stock for all books in inventory
+                for (const auto& book : bookshop.getInventory()) {
+                    bookshop.checkLowStock(book); // Call the method to check if the stock is low
+                }
+            case 9:
                 cout << "Exiting the system. Thank you!\n";
                 break;
             default:
                 cout << "Invalid choice. Please try again.\n";
         }
-    } while (choice != 8);
+    } while (choice != 9);
 
     return 0;
 }
+
 
