@@ -1,0 +1,87 @@
+Design Document for Bookshop Management System
+
+1. Overview  
+The Bookshop Management System is designed to handle basic operations of a bookshop, such as adding books, managing customers, processing sales, and tracking inventory. The system is built using C++ and is organized into several classes to represent books, sales, customers, and the bookshop itself.
+
+2. Class Descriptions
+
+2.1 Book Class  
+- Attributes:
+  - title: Stores the title of the book.
+  - author: Stores the author's name.
+  - publisher: Stores the publisher's name.
+  - edition: Stores the edition of the book.
+  - ID: A unique identifier for each book.
+  - price: The price of the book.
+  - stock: The number of copies available in stock.
+  
+- Constructor:
+  - Initializes the book with its title, author, publisher, edition, ID, price, and stock.
+
+- Access Permissions:
+  - The Book class is accessed by the Bookshop and Sale classes to perform various operations like adding books, updating stock, etc.
+
+2.2 Sale Class  
+- Attributes:
+  - title: The title of the book being sold.
+  - quantity: The quantity of books sold.
+  - totalPrice: The total price of the sale.
+
+- Constructor:
+  - Initializes the sale with the book title, quantity, and total price.
+
+- Access Permissions:
+  - Sale records are added to the purchase history of the customers and the sales list of the bookshop.
+
+2.3 Customer Class  
+- Attributes:
+  - name: Customer's name.
+  - customerID: A unique identifier for each customer.
+  - contact: Customer's contact information (email, phone number, etc.).
+  - purchaseHistory: A vector of Sale objects that stores the customer's purchase history.
+
+- Constructor:
+  - Initializes the customer with their name, customer ID, and contact details.
+
+- Methods:
+  - addPurchase(Sale sale): Adds a sale to the customer's purchase history.
+  - viewPurchaseHistory(): Displays all purchases made by the customer.
+
+2.4 Bookshop Class  
+- Attributes:
+  - inventory: A vector containing all the books in the shop's inventory.
+  - sales: A vector containing all sales made in the bookshop.
+  - customers: A vector containing all registered customers.
+
+- Methods:
+  - addBook(Book newBook): Adds a new book to the inventory.
+  - deleteBook(int idToDelete): Deletes a book from the inventory by its ID.
+  - viewBooks(): Displays the details of all books in the inventory.
+  - addCustomer(Customer newCustomer): Adds a new customer to the system.
+  - viewCustomers(): Displays a list of all registered customers.
+  - purchaseBook(string title, int quantity, int customerID): Handles the purchase of books by customers, reduces stock, and records the sale.
+  - displaySalesReport(): Displays a summary of all sales.
+  - checkLowStock(Book book): Checks if the stock of a book is below a specified threshold and issues a warning.
+
+3. Workflow
+
+1. Add Book: The user can add a new book to the inventory by providing details such as title, author, publisher, edition, ID, price, and stock.
+   
+2. Delete Book: The user can delete a book from the inventory by providing the book's unique ID.
+
+3. View Books: The system displays a list of all books available in the inventory.
+
+4. Add Customer: A new customer can be added to the system by providing their name, customer ID, and contact details.
+
+5. View Customers: The system shows all registered customers in the bookshop.
+
+6. Purchase Book: Customers can purchase books. The system checks if sufficient stock is available and records the purchase.
+
+7. Sales Report: A report showing all the sales made in the shop, including the book title, quantity sold, and the total price of each sale.
+
+8. Low Stock Check: The system checks the stock of all books in the inventory and issues a warning if any book's stock is below the specified threshold (5 copies).
+
+
+
+
+
