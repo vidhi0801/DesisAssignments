@@ -5,60 +5,90 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cstring>
+#include <fstream>
+#include <chrono>
+#include <mutex>
+#include <vector>
 
-#define PORT 8080 // Define the port number to connect to the server
+#define PORT 8080
 
-// Function to receive messages from the server
+std::mutex chat_history_mutex;  // Mutex for chat history file
+
 void receive_messages(int sock) {
-    char buffer[1024];  // Buffer to store incoming messages
+    char buffer[1024];
     while (true) {
-        memset(buffer, 0, sizeof(buffer));  // Clear the buffer before receiving new data
-        int bytes_received = recv(sock, buffer, sizeof(buffer) - 1, 0);  // Receive a message from the server
-        if (bytes_received <= 0) {  // If the connection is lost or no data is received
-            std::cout << "Disconnected from server.\n";  // Notify the user
-            close(sock);  // Close the socket connection
-            break;  // Exit the loop as the connection is closed
+        memset(buffer, 0, sizeof(buffer));
+        int bytes_received = recv(sock, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0) {
+            std::cout << "Disconnected from server.\n";
+            close(sock);
+            break;
         }
-        std::cout << buffer << std::endl;  // Print the received message to the console
+        std::cout << "Received: " << buffer << std::endl;
+
+        // Save received messages to chat_history.txt
+        {
+            std::lock_guard<std::mutex> lock(chat_history_mutex);
+            std::ofstream out("chat_history.txt", std::ios::app);
+            if (out.is_open()) {
+                out << "Received: " << buffer << std::endl;
+            } else {
+                std::cerr << "Failed to open chat_history.txt for saving.\n";
+            }
+        }
+    }
+}
+
+void save_sent_message(const std::string& message) {
+    // Save sent messages to chat_history.txt
+    {
+        std::lock_guard<std::mutex> lock(chat_history_mutex);
+        std::ofstream out("chat_history.txt", std::ios::app);
+        if (out.is_open()) {
+            out << "Sent: " << message << std::endl;
+        } else {
+            std::cerr << "Failed to open chat_history.txt for saving.\n";
+        }
     }
 }
 
 int main() {
-    // Create a socket for the client
     int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {  // If socket creation fails
-        perror("Socket creation failed");  // Print error message
+    if (sock < 0) {
+        perror("Socket creation failed");
         return -1;
     }
 
-    // Set up the server address structure
     struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;  // Set address family to IPv4
-    server_address.sin_port = htons(PORT);  // Set port number to connect to
-    inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr);  // Convert server IP address to binary format
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(PORT);
+    inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr);
 
-    // Attempt to connect to the server
     if (connect(sock, (struct sockaddr*)&server_address, sizeof(server_address)) < 0) {
-        perror("Connection failed");  // If connection fails, print error message
-        close(sock);  // Close the socket
+        perror("Connection failed");
+        close(sock);
         return -1;
     }
 
-    std::cout << "Connected to the server.\n";  // Notify the user of a successful connection
+    std::cout << "Connected to the server.\n";
 
-    // Start a new thread to receive messages from the server
-    std::thread(receive_messages, sock).detach();  // Detach the thread to run independently
+    // Start the message receiving thread
+    std::thread(receive_messages, sock).detach();
 
     std::string message;
     while (true) {
-        std::getline(std::cin, message);  // Get user input
-        if (message == "exit") {  // If the user types "exit"
-            close(sock);  // Close the socket connection
-            break;  // Exit the loop and terminate the program
+        std::getline(std::cin, message);
+        if (message == "exit") {
+            close(sock);
+            break;
         }
-        send(sock, message.c_str(), message.size(), 0);  // Send the message to the server
+
+        // Save the sent message to chat_history.txt
+        save_sent_message(message);
+
+        // Send the message to the server
+        send(sock, message.c_str(), message.size(), 0);
     }
 
     return 0;
 }
-
