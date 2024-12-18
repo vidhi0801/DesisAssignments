@@ -10,3 +10,4 @@ Basic client-server communication over TCP using sockets.
 Files:-
 server.cpp: The server code that manages client connections and broadcasts messages.
 client.cpp: The client code that connects to the server, sends messages, and receives messages from the server.
+chat_history.txt: It stores the conversation between the clients.
